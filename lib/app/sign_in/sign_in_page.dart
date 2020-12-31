@@ -1,61 +1,57 @@
 import 'dart:math';
 
 import 'package:alert_dialogs/alert_dialogs.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:starter_architecture_flutter_firebase/app/top_level_providers.dart';
 import 'package:starter_architecture_flutter_firebase/app/sign_in/sign_in_view_model.dart';
 import 'package:starter_architecture_flutter_firebase/app/sign_in/sign_in_button.dart';
 import 'package:starter_architecture_flutter_firebase/constants/keys.dart';
 import 'package:starter_architecture_flutter_firebase/constants/strings.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:firebase_auth_service/firebase_auth_service.dart';
-import 'package:starter_architecture_flutter_firebase/routing/router.dart';
+import 'package:starter_architecture_flutter_firebase/routing/app_router.dart';
 
-class SignInPageBuilder extends StatelessWidget {
+final signInModelProvider = ChangeNotifierProvider<SignInViewModel>(
+  (ref) => SignInViewModel(auth: ref.watch(firebaseAuthProvider)),
+);
+
+class SignInPage extends ConsumerWidget {
   @override
-  Widget build(BuildContext context) {
-    final FirebaseAuthService auth =
-        Provider.of<FirebaseAuthService>(context, listen: false);
-    return ChangeNotifierProvider<SignInViewModel>(
-      create: (_) => SignInViewModel(auth: auth),
-      child: Consumer<SignInViewModel>(
-        builder: (_, viewModel, __) => SignInPage._(
-          viewModel: viewModel,
-          title: 'Architecture Demo',
-        ),
+  Widget build(BuildContext context, ScopedReader watch) {
+    final signInModel = watch(signInModelProvider);
+    return ProviderListener<SignInViewModel>(
+      provider: signInModelProvider,
+      onChange: (context, model) async {
+        if (model.error != null) {
+          await showExceptionAlertDialog(
+            context: context,
+            title: Strings.signInFailed,
+            exception: model.error,
+          );
+        }
+      },
+      child: SignInPageContents(
+        viewModel: signInModel,
+        title: 'Architecture Demo',
       ),
     );
   }
 }
 
-class SignInPage extends StatelessWidget {
-  const SignInPage._({Key key, this.viewModel, this.title}) : super(key: key);
+class SignInPageContents extends StatelessWidget {
+  const SignInPageContents(
+      {Key key, this.viewModel, this.title = 'Architecture Demo'})
+      : super(key: key);
   final SignInViewModel viewModel;
   final String title;
 
   static const Key emailPasswordButtonKey = Key(Keys.emailPassword);
   static const Key anonymousButtonKey = Key(Keys.anonymous);
 
-  Future<void> _showSignInError(BuildContext context, dynamic exception) async {
-    await showExceptionAlertDialog(
-      context: context,
-      title: Strings.signInFailed,
-      exception: exception,
-    );
-  }
-
-  Future<void> _signInAnonymously(BuildContext context) async {
-    try {
-      await viewModel.signInAnonymously();
-    } catch (e) {
-      await _showSignInError(context, e);
-    }
-  }
-
   Future<void> _showEmailPasswordSignInPage(BuildContext context) async {
     final navigator = Navigator.of(context);
     await navigator.pushNamed(
-      Routes.emailPasswordSignInPage,
+      AppRoutes.emailPasswordSignInPage,
       arguments: () => navigator.pop(),
     );
   }
@@ -78,7 +74,7 @@ class SignInPage extends StatelessWidget {
         child: CircularProgressIndicator(),
       );
     }
-    return Text(
+    return const Text(
       Strings.signIn,
       textAlign: TextAlign.center,
       style: TextStyle(fontSize: 32.0, fontWeight: FontWeight.w600),
@@ -111,7 +107,7 @@ class SignInPage extends StatelessWidget {
                 color: Theme.of(context).primaryColor,
               ),
               const SizedBox(height: 8),
-              Text(
+              const Text(
                 Strings.or,
                 style: TextStyle(fontSize: 14.0, color: Colors.black87),
                 textAlign: TextAlign.center,
@@ -122,9 +118,8 @@ class SignInPage extends StatelessWidget {
                 text: Strings.goAnonymous,
                 color: Theme.of(context).primaryColor,
                 textColor: Colors.white,
-                onPressed: viewModel.isLoading
-                    ? null
-                    : () => _signInAnonymously(context),
+                onPressed:
+                    viewModel.isLoading ? null : viewModel.signInAnonymously,
               ),
             ],
           ),

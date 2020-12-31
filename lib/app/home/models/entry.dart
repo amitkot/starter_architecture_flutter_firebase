@@ -1,7 +1,8 @@
+import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 
-class Entry {
-  Entry({
+class Entry extends Equatable {
+  const Entry({
     @required this.id,
     @required this.jobId,
     @required this.start,
@@ -9,18 +10,24 @@ class Entry {
     this.comment,
   });
 
-  String id;
-  String jobId;
-  DateTime start;
-  DateTime end;
-  String comment;
+  final String id;
+  final String jobId;
+  final DateTime start;
+  final DateTime end;
+  final String comment;
+
+  @override
+  List<Object> get props => [id, jobId, start, end, comment];
+
+  @override
+  bool get stringify => true;
 
   double get durationInHours =>
       end.difference(start).inMinutes.toDouble() / 60.0;
 
   factory Entry.fromMap(Map<dynamic, dynamic> value, String id) {
-    final int startMilliseconds = value['start'];
-    final int endMilliseconds = value['end'];
+    final startMilliseconds = value['start'] as int;
+    final endMilliseconds = value['end'] as int;
     return Entry(
       id: id,
       jobId: value['jobId'],

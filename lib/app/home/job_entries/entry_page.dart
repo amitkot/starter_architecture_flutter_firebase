@@ -1,13 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:starter_architecture_flutter_firebase/app/top_level_providers.dart';
 import 'package:starter_architecture_flutter_firebase/common_widgets/date_time_picker.dart';
 import 'package:starter_architecture_flutter_firebase/app/home/job_entries/format.dart';
 import 'package:starter_architecture_flutter_firebase/app/home/models/entry.dart';
 import 'package:starter_architecture_flutter_firebase/app/home/models/job.dart';
 import 'package:alert_dialogs/alert_dialogs.dart';
-import 'package:starter_architecture_flutter_firebase/routing/router.dart';
+import 'package:starter_architecture_flutter_firebase/routing/app_router.dart';
 import 'package:starter_architecture_flutter_firebase/services/firestore_database.dart';
 import 'package:pedantic/pedantic.dart';
 
@@ -18,7 +19,7 @@ class EntryPage extends StatefulWidget {
 
   static Future<void> show({BuildContext context, Job job, Entry entry}) async {
     await Navigator.of(context, rootNavigator: true).pushNamed(
-      Routes.entryPage,
+      AppRoutes.entryPage,
       arguments: {
         'job': job,
         'entry': entry,
@@ -68,7 +69,7 @@ class _EntryPageState extends State<EntryPage> {
 
   Future<void> _setEntryAndDismiss() async {
     try {
-      final database = Provider.of<FirestoreDatabase>(context, listen: false);
+      final database = context.read(databaseProvider);
       final entry = _entryFromState();
       await database.setEntry(entry);
       Navigator.of(context).pop();
@@ -91,10 +92,10 @@ class _EntryPageState extends State<EntryPage> {
           FlatButton(
             child: Text(
               widget.entry != null ? 'Update' : 'Create',
-              style: TextStyle(fontSize: 18.0, color: Colors.white),
+              style: const TextStyle(fontSize: 18.0, color: Colors.white),
             ),
-            onPressed: _setEntryAndDismiss,
-          )
+            onPressed: () => _setEntryAndDismiss(),
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -145,7 +146,7 @@ class _EntryPageState extends State<EntryPage> {
       children: <Widget>[
         Text(
           'Duration: $durationFormatted',
-          style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w500),
+          style: const TextStyle(fontSize: 18.0, fontWeight: FontWeight.w500),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -158,12 +159,12 @@ class _EntryPageState extends State<EntryPage> {
       keyboardType: TextInputType.text,
       maxLength: 50,
       controller: TextEditingController(text: _comment),
-      decoration: InputDecoration(
+      decoration: const InputDecoration(
         labelText: 'Comment',
         labelStyle: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w500),
       ),
       keyboardAppearance: Brightness.light,
-      style: TextStyle(fontSize: 20.0, color: Colors.black),
+      style: const TextStyle(fontSize: 20.0, color: Colors.black),
       maxLines: null,
       onChanged: (comment) => _comment = comment,
     );

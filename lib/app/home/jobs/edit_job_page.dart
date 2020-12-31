@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:starter_architecture_flutter_firebase/app/home/models/job.dart';
 import 'package:alert_dialogs/alert_dialogs.dart';
-import 'package:starter_architecture_flutter_firebase/routing/router.dart';
+import 'package:starter_architecture_flutter_firebase/app/top_level_providers.dart';
+import 'package:starter_architecture_flutter_firebase/routing/app_router.dart';
 import 'package:starter_architecture_flutter_firebase/services/firestore_database.dart';
 import 'package:pedantic/pedantic.dart';
 
@@ -13,7 +14,7 @@ class EditJobPage extends StatefulWidget {
 
   static Future<void> show(BuildContext context, {Job job}) async {
     await Navigator.of(context, rootNavigator: true).pushNamed(
-      Routes.editJobPage,
+      AppRoutes.editJobPage,
       arguments: job,
     );
   }
@@ -49,7 +50,7 @@ class _EditJobPageState extends State<EditJobPage> {
   Future<void> _submit() async {
     if (_validateAndSaveForm()) {
       try {
-        final database = Provider.of<FirestoreDatabase>(context, listen: false);
+        final database = context.read(databaseProvider);
         final jobs = await database.jobsStream().first;
         final allLowerCaseNames =
             jobs.map((job) => job.name.toLowerCase()).toList();
@@ -87,11 +88,11 @@ class _EditJobPageState extends State<EditJobPage> {
         title: Text(widget.job == null ? 'New Job' : 'Edit Job'),
         actions: <Widget>[
           FlatButton(
-            child: Text(
+            child: const Text(
               'Save',
               style: TextStyle(fontSize: 18, color: Colors.white),
             ),
-            onPressed: _submit,
+            onPressed: () => _submit(),
           ),
         ],
       ),

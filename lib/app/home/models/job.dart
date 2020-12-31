@@ -1,24 +1,29 @@
-import 'dart:ui';
-
+import 'package:equatable/equatable.dart';
 import 'package:meta/meta.dart';
 
 @immutable
-class Job {
+class Job extends Equatable {
   const Job(
       {@required this.id, @required this.name, @required this.ratePerHour});
   final String id;
   final String name;
   final int ratePerHour;
 
+  @override
+  List<Object> get props => [id, name, ratePerHour];
+
+  @override
+  bool get stringify => true;
+
   factory Job.fromMap(Map<String, dynamic> data, String documentId) {
     if (data == null) {
       return null;
     }
-    final String name = data['name'];
+    final name = data['name'] as String;
     if (name == null) {
       return null;
     }
-    final int ratePerHour = data['ratePerHour'];
+    final ratePerHour = data['ratePerHour'] as int;
     return Job(id: documentId, name: name, ratePerHour: ratePerHour);
   }
 
@@ -28,20 +33,4 @@ class Job {
       'ratePerHour': ratePerHour,
     };
   }
-
-  @override
-  int get hashCode => hashValues(id, name, ratePerHour);
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if (runtimeType != other.runtimeType) return false;
-    final Job otherJob = other;
-    return id == otherJob.id &&
-        name == otherJob.name &&
-        ratePerHour == otherJob.ratePerHour;
-  }
-
-  @override
-  String toString() => 'id: $id, name: $name, ratePerHour: $ratePerHour';
 }
